@@ -55,7 +55,7 @@ class Entity {
   }
 
   template <typename T>
-  const T& get() {
+  const T& get() const {
     return std::get<T>(m_components);
   }
 
