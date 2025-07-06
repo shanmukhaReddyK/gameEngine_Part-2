@@ -30,6 +30,10 @@ class Vec2 {
         return Vec2(x - rhs.x, y - rhs.y);
     }
 
+    Vec2 operator * (const T val ) const {
+        return Vec2(val*x, val*y);
+    }
+
     void normalize () {
         float mag = sqrt((x*x)+(y*y));
         if (mag != 0.0f) {

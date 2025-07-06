@@ -31,7 +31,7 @@ std::shared_ptr<Entity> Game::player() {
 
 void Game::run() {
     //TODO: Add pause functionality here
-    // some systems shgould function while paused (rendering)
+    // some systems should function while paused (rendering)
     // some systems should not (movement/input)
 
     while(m_running) {
@@ -98,7 +98,14 @@ void Game::spawnSmallEnemies( std::shared_ptr<Entity> e) {
 void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2f& target) {
     //TODO: implement the spawning of a bullet which travels towards the target
     //- bullet speed is given as a scaler speed 
-    //- set the correspondng velocity by calculating 
+    //- set the correspondng velocity by calculating
+    auto e = m_entities.addEntity("bullet");
+    Vec2f direction = target-Vec2f(entity->get<CTransform>().pos);
+    direction.normalize();
+    Vec2f velocity= direction*15;
+    e->add<CTransform>(Vec2f(entity->get<CTransform>().pos), velocity, 0.0f);
+    e->add<CShape>(6.0f, 32, sf::Color(255,255,255), sf::Color(0,0,0), 0.5f);
+    
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> e) {
@@ -109,7 +116,7 @@ void Game::sMovement() {
     //- you should read the m_player->CInput component to determine if the player is  moving or not
     player()->get<CTransform>().velocity=Vec2f(player()->get<CInput>().right-player()->get<CInput>().left,player()->get<CInput>().down-player()->get<CInput>().up);
     player()->get<CTransform>().velocity.normalize();
-    player()->get<CTransform>().velocity*=2; //scale it with speed to get velocity;
+    player()->get<CTransform>().velocity*=5; //scale it with speed to get velocity;
 
     for(auto &e : m_entities.getEntities()) {
 
@@ -171,9 +178,16 @@ void Game::sRender() {
     //set the rotation of the shaped based on the entity's transform->angle
     player()->get<CTransform>().angle += 1.0f;
     player()->get<CShape>().circle.setRotation(sf::degrees(player()->get<CTransform>().angle));
-
+    
     //draw the entity's sf::circleshape
     m_window.draw(player()->get<CShape>().circle);
+
+    //bullets
+    auto bullets = m_entities.getEntities("bullet");
+    for(auto& e : bullets) {
+        e->get<CShape>().circle.setPosition(e->get<CTransform>().pos);
+        m_window.draw(e->get<CShape>().circle);
+    }
 
     // draw ui the last
     ImGui::SFML::Render(m_window);
