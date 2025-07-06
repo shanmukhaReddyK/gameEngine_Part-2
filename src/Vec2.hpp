@@ -32,8 +32,10 @@ class Vec2 {
 
     void normalize () {
         float mag = sqrt((x*x)+(y*y));
-        x*=mag;
-        y*=mag;
+        if (mag != 0.0f) {
+            x /= mag;
+            y /= mag;
+        }
     }
 
     bool operator == (const Vec2& rhs) const {
