@@ -106,13 +106,12 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> e) {
 }
 
 void Game::sMovement() {
-    //TODO: implement all entity movement in this function 
     //- you should read the m_player->CInput component to determine if the player is  moving or not
     player()->get<CTransform>().velocity=Vec2f(player()->get<CInput>().right-player()->get<CInput>().left,player()->get<CInput>().down-player()->get<CInput>().up);
     player()->get<CTransform>().velocity.normalize();
     player()->get<CTransform>().velocity*=2; //scale it with speed to get velocity;
 
-    for(auto &e : m_entities.getEntities()) {   //!check out later if it works with for(auto e:)
+    for(auto &e : m_entities.getEntities()) {
 
       auto& transform = e->get<CTransform>();
 
