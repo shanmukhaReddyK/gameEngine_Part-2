@@ -25,7 +25,7 @@ void Game::init(const std::string& path) {
 
 std::shared_ptr<Entity> Game::player() {
     auto& players = m_entities.getEntities("player");
-    assert(players.size()==1);
+    assert(players.size()==1); //TODO : learn about assert and why are wwe using this line
     return players.front();
 }
 
@@ -62,11 +62,11 @@ void Game::spawnPlayer() {
     //TODO: finish adding all properties of the player with correct values from config
 
     //we creater every entity by calling EntityManager.addEntity(tag);
-    //this returns a std::shared_ptr<Enity>, so wwe use auto to save typing
+    //this returns a std::shared_ptr<Enity>, so we use auto to save typing
     auto entity = m_entities.addEntity("player");
 
     //give entity a transform so that it spawns at(200,200) with velocity (1,1) and angle 0
-    entity->add<CTransform>(Vec2f(200.0f,200.0f), Vec2f(1.0f,1.0f), 0.0f);
+    entity->add<CTransform>(Vec2f(200.0f,200.0f), Vec2f(0.0f,0.0f), 0.0f);
     
     //the entity shape will have radius 32, 8 sides, dark grey fill , and red outline of thickness 4
     entity->add<CShape>(32.0f, 8, sf::Color(10,10,10), sf::Color(255,0,0), 4.0f);
@@ -108,9 +108,19 @@ void Game::spawnSpecialWeapon(std::shared_ptr<Entity> e) {
 void Game::sMovement() {
     //TODO: implement all entity movement in this function 
     //- you should read the m_player->CInput component to determine if the player is  moving or not
-    
-    auto& transform = player()->get<CTransform>();
-    transform.pos += transform.velocity;
+    player()->get<CTransform>().velocity.x= player()->get<CInput>().right-player()->get<CInput>().left;
+    player()->get<CTransform>().velocity.y= player()->get<CInput>().down-player()->get<CInput>().up;
+    player()->get<CTransform>().velocity.normalize();
+    player()->get<CTransform>().velocity*=2; //scale it with speed to get velocity;
+
+    for(auto &e : m_entities.getEntities()) {   //!check out later if it works with for(auto e:)
+
+      auto& transform = e->get<CTransform>();
+
+        if(transform.exists) {
+         transform.pos += transform.velocity;
+        }
+    }
 }
 
 void Game::sLifespan() {
@@ -175,9 +185,6 @@ void Game::sRender() {
 }
 
 void Game::sUserInput() {
-    //TODO: handel user input here
-    //  note that you should be only setting player's input component variables here
-    //  you should not implement player movement logic here
     //the movement system will read variables you set in this function
 
     while (const auto event = m_window.pollEvent()) {
@@ -186,25 +193,55 @@ void Game::sUserInput() {
         if (event->is<sf::Event::Closed>())
             m_running=false;
 
-        if(event->is<sf::Event::KeyPressed>()){
-
-            switch(sf::Keyboard::Scan()){
+        if(auto const& key_pressed = event->getIf<sf::Event::KeyPressed>()){
+         switch(key_pressed->scancode){
                 case sf::Keyboard::Scancode::W:
                     std::cout<<"W key is pressed!\n";
-                    //TODO: set input player component "up"  to true
+                    player()->get<CInput>().up = true;
+                    break;
+
+                case sf::Keyboard::Scancode::D:
+                    std::cout<<"D key is pressed!\n";
+                    player()->get<CInput>().right = true;
+                    break;
+                
+                case sf::Keyboard::Scancode::S:
+                    std::cout<<"S key is pressed!\n";
+                    player()->get<CInput>().down = true;
+                    break;
+                
+                case sf::Keyboard::Scancode::A:
+                    std::cout<<"A key is pressed!\n";
+                    player()->get<CInput>().left = true;
                     break;
                 
                 default :
                     break;
             }
+        
         }
 
-        if(event->is<sf::Event::KeyReleased>()){
-
-            switch(sf::Keyboard::Scan()){
+        if(auto const& key_pressed = event->getIf<sf::Event::KeyReleased>()){
+            
+            switch(key_pressed->scancode){
                 case sf::Keyboard::Scancode::W:
                     std::cout<<"W key is released!\n";
-                    //TODO: set input player component "up"  to false
+                    player()->get<CInput>().up = false;
+                    break;
+
+                case sf::Keyboard::Scancode::D:
+                    std::cout<<"D key is released!\n";
+                    player()->get<CInput>().right = false;
+                    break;
+                
+                case sf::Keyboard::Scancode::S:
+                    std::cout<<"S key is released!\n";
+                    player()->get<CInput>().down = false;
+                    break;
+                
+                case sf::Keyboard::Scancode::A:
+                    std::cout<<"A key is released!\n";
+                    player()->get<CInput>().left = false;
                     break;
                 
                 default :
@@ -220,7 +257,7 @@ void Game::sUserInput() {
             if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Left)) {
 
                 std::cout<<"left mouse button is clicked at (" << sf::Mouse::getPosition(m_window).x <<", "<<sf::Mouse::getPosition(m_window).y<<")\n";
-                //call spawn bullet here
+                spawnBullet(player(),Vec2f(sf::Mouse::getPosition(m_window).x,sf::Mouse::getPosition(m_window).y));
             }
 
              if(sf::Mouse::isButtonPressed(sf::Mouse::Button::Right)) {

@@ -2,6 +2,7 @@
 
 #include "Entity.hpp"
 #include<map>
+#include<algorithm>
 
 using EntityVec = std::vector<std::shared_ptr<Entity>>;
 
@@ -13,7 +14,9 @@ class EntityManager {
 
     void removeDeadEntities(EntityVec& vec){
         //remove all the dead entities
-        //this called bu update() function
+        //this called by update() function
+        auto ne = std::remove_if(vec.begin(), vec.end(),[](std::shared_ptr<Entity> e) { return !e->isAlive();});
+        vec.erase(ne,vec.end());
     }
 
     public:
@@ -24,6 +27,9 @@ class EntityManager {
         //add entities from m_entitesToAdd the proper location(s)
         // -add them to the vector of allentities
         // -add them to the vector inside the map, with tag as a key
+        for(auto& e : m_entitiesToAdd ) {
+            addEntity(e->m_tag);
+        }
 
         //remove all the dead from the vector of allentities
         removeDeadEntities(m_entities);
@@ -38,7 +44,7 @@ class EntityManager {
     std::shared_ptr<Entity> addEntity(const std::string& tag) {
 
         //create the entity shared pointer
-        auto entity = std::make_shared<Entity>(new Entity(m_totalEntities++,tag));
+        auto entity = std::shared_ptr<Entity>(new Entity(m_totalEntities++,tag));
 
         //add it to vec of all entities
         m_entities.push_back(entity);

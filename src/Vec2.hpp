@@ -30,6 +30,12 @@ class Vec2 {
         return Vec2(x - rhs.x, y - rhs.y);
     }
 
+    void normalize () {
+        float mag = sqrt((x*x)+(y*y));
+        x*=mag;
+        y*=mag;
+    }
+
     bool operator == (const Vec2& rhs) const {
         if(x==rhs.x && y==rhs.y)
             return true;

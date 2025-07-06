@@ -43,7 +43,7 @@ class Entity {
 
   template <typename T, typename... TArgs>
   T& add(TArgs&&...mArgs) {
-    auto& component = get<T>;
+    auto& component = get<T>();
     component = T(std::forward<TArgs>(mArgs)...);
     component.exists=true;
     return component;
