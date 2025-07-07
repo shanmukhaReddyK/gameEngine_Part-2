@@ -168,27 +168,20 @@ void Game::sGUI() {
 }
 
 void Game::sRender() {
-    //TODO: change code below to draw all of the entities
     //  sample drawing of player we created
     m_window.clear();
 
-    //set the position of the entity based on entity's transform->pos
-    player()->get<CShape>().circle.setPosition(player()->get<CTransform>().pos);
-
-    //set the rotation of the shaped based on the entity's transform->angle
-    player()->get<CTransform>().angle += 1.0f;
-    player()->get<CShape>().circle.setRotation(sf::degrees(player()->get<CTransform>().angle));
     
-    //draw the entity's sf::circleshape
-    m_window.draw(player()->get<CShape>().circle);
+    for(auto& e: m_entities.getEntities()) {
+        //set the position of the entity based on entity's transform->pos
+        e->get<CShape>().circle.setPosition(e->get<CTransform>().pos);   
 
-    //bullets
-    auto bullets = m_entities.getEntities("bullet");
-    for(auto& e : bullets) {
-        e->get<CShape>().circle.setPosition(e->get<CTransform>().pos);
+        //set the rotation of the shaped based on the entity's transform->angle
+        e->get<CTransform>().angle += 3.0f;
+        e->get<CShape>().circle.setRotation(sf::degrees(e->get<CTransform>().angle));
         m_window.draw(e->get<CShape>().circle);
     }
-
+    
     // draw ui the last
     ImGui::SFML::Render(m_window);
 
