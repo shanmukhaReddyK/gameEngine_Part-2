@@ -1,8 +1,10 @@
 #include<Game.h>
 
 #include<iostream>
+#include<cstdlib>
+#include<ctime>
 
-Game::Game( const std::string& config) {
+Game::Game(const std::string& config) {
     init(config);
 }
 
@@ -75,10 +77,29 @@ void Game::spawnPlayer() {
     entity->add<CInput>();
 }
 
+int Game::sRandnum(int min, int max) {
+    srand(time(0));
+    return min + (rand() % (max-min+1));
+}
+
 //spawn enemy at random position
 void Game::spawnEnemy() {
     //TODO: make sure the enemy is spawned properly with the m_enemyConfig variables
+    //* to get random number r u can use r = min + (rand()%(1+max-min))
     // enemmy must be spawned completely within the bounds of the window
+    auto entity = m_entities.addEntity("enemy");
+   
+    //the entity shape will have shape radius, random sides, random fill , and white outline of thickness 2
+    //TODO: implement better way to get random color because it gives dame color becaused it is called in same second (using time(0) for thats why)
+    entity->add<CShape>(28.0f,sRandnum(3,6), sf::Color(sRandnum(0,255),sRandnum(0,26),sRandnum(0,157)), sf::Color(255,0,0), 2.0f);
+    
+    //get radius to set limits in pos 
+    int radius = entity->get<CShape>().circle.getRadius();
+
+    float randangle=(sRandnum(0,360)*(3.14159f/180));
+
+    //give entity a transform so that it spawns at random pos with  random velocity (within the constraint) and angle 0
+    entity->add<CTransform>(Vec2f(sRandnum(0+radius,1280-radius),sRandnum(0+radius,720-radius)), Vec2f(4*std::cos(randangle),4*std::sin(randangle)), 0);
 
     //record when the most recent enemy was spawned
     m_lastEnenmySpawnTime=m_currentFrame;
@@ -155,7 +176,10 @@ void Game::sCollision() {
 }
 
 void Game::sEnemySpawner() {
-    //TODO: code which implements enemy spawing should go here
+    //call enemy spawner every time interval mentioned in enemyconfig file
+    if(m_currentFrame==m_lastEnenmySpawnTime+60) {
+        spawnEnemy();
+    }
 }
 
 void Game::sGUI() {

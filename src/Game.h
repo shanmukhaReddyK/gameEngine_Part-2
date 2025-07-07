@@ -41,6 +41,7 @@ class Game {
     void sGUI();
     void sRender();
     void sUserInput();
+    int sRandnum(int min,int max);
 
     std::shared_ptr<Entity> player();
 
