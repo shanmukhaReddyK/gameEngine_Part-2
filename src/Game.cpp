@@ -181,6 +181,7 @@ void Game::sLifespan() {
             if(e->isAlive()) {
                 sf::Color c = e->get<CShape>().circle.getFillColor();
                 e->get<CShape>().circle.setFillColor({c.r,c.g,c.b,std::uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
+                e->get<CShape>().circle.setOutlineColor({255,0,0,std::uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
             }
 
             if(lifespan.remaining<=0) {
