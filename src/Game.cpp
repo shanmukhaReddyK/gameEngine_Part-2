@@ -27,7 +27,7 @@ void Game::init(const std::string& path) {
 
 std::shared_ptr<Entity> Game::player() {
     auto& players = m_entities.getEntities("player");
-    assert(players.size()==1); //TODO : learn about assert and why are wwe using this line
+    assert(players.size()==1); //TODO : learn about assert and why are we using this line
     return players.front();
 }
 
@@ -49,6 +49,7 @@ void Game::run() {
         sUserInput();
         sGUI();
         sRender();
+        sLifespan();
 
         //increment the current frame
         //TODO::may be need to move while imlementing pause
@@ -87,7 +88,6 @@ int Game::sRandnum(int min, int max) {
 
 //spawn enemy at random position
 void Game::spawnEnemy() {
-    //TODO: make sure the enemy is spawned properly with the m_enemyConfig variables
     //* to get random number r u can use r = min + (rand()%(1+max-min))
     // enemmy must be spawned completely within the bounds of the window
     auto entity = m_entities.addEntity("enemy");
@@ -113,8 +113,6 @@ void Game::spawnEnemy() {
 
 //spawn small enemies when a big one (input entity e) explodes
 void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
-    //TODO: spawn small enemies at the location input enemy e
-
     //when we create smaller enemy, we have to read the values of the orginal enemy
     //- spawn a number of small enemies equal to vertices of original enemy
     //- set each small enemy to the same color as the original, half the size
@@ -130,21 +128,24 @@ void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
         entity->add<CShape>(parentCircle.getRadius()/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),parentCircle.getOutlineThickness()/2);
         entity->add<CTransform>(parenrtTrans.pos,Vec2f(4*std::cos((n)*anglefraction),4*std::sin((n)*anglefraction)),0);
         entity->add<CCollision>((parentCircle.getRadius()/2)-1);
+        //add lifespan
+        entity->add<CLifespan>(90);
     }
 }
 
 //spawn a bullet from a given entity to a target location 
 void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2f& target) {
-    //TODO: implement the spawning of a bullet which travels towards the target
     //- bullet speed is given as a scaler speed 
     //- set the correspondng velocity by calculating
     auto e = m_entities.addEntity("bullet");
     Vec2f direction = target-Vec2f(entity->get<CTransform>().pos);
     direction.normalize();
-    Vec2f velocity= direction*15;
+    Vec2f velocity= direction*20;
     e->add<CTransform>(Vec2f(entity->get<CTransform>().pos), velocity, 0.0f);
     e->add<CShape>(6.0f, 32, sf::Color(255,255,255), sf::Color(0,0,0), 0.5f);
-    
+
+    //add lifespan
+    e->add<CLifespan>(90);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> e) {
@@ -168,19 +169,28 @@ void Game::sMovement() {
 }
 
 void Game::sLifespan() {
-    //TODO: implement all lifespan functionality
 
-    //for all entities
-    //if entity has no lifespan component skip it
-    //if entity has >0 remaining then subtract 1
-    //if it has life span and alive 
-    //  scale its alpha channel propely
-    //if it has lifespan and its time is up
-    //  destroy the entity
+    for (auto &e:m_entities.getEntities()) {
+        auto&lifespan = e->get<CLifespan>();
+
+        if(lifespan.exists) {
+            if(lifespan.remaining>0)
+                lifespan.remaining--;
+            
+            //setup alpha channel
+            if(e->isAlive()) {
+                sf::Color c = e->get<CShape>().circle.getFillColor();
+                e->get<CShape>().circle.setFillColor({c.r,c.g,c.b,std::uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
+            }
+
+            if(lifespan.remaining<=0) {
+                e->destroy();
+            }
+        }
+    }
 }
 
 void Game::sCollision() {
-    //TODO: implement all proper collisions between entities
     // be sure to use the collection radius, NOT the shape radius
     for (auto &b:m_entities.getEntities("bullet")) {
 
