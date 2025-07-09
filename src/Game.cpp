@@ -75,6 +75,9 @@ void Game::spawnPlayer() {
 
     //add a input component to the player so we can use inputs
     entity->add<CInput>();
+
+    //add collision 
+    entity->add<CCollision>(30.0f);
 }
 
 int Game::sRandnum(int min, int max) {
@@ -101,18 +104,33 @@ void Game::spawnEnemy() {
     //give entity a transform so that it spawns at random pos with  random velocity (within the constraint) and angle 0
     entity->add<CTransform>(Vec2f(sRandnum(0+radius,1280-radius),sRandnum(0+radius,720-radius)), Vec2f(4*std::cos(randangle),4*std::sin(randangle)), 0);
 
+    //add collision
+    entity->add<CCollision>(26.0f);
+
     //record when the most recent enemy was spawned
     m_lastEnenmySpawnTime=m_currentFrame;
 }
 
 //spawn small enemies when a big one (input entity e) explodes
-void Game::spawnSmallEnemies( std::shared_ptr<Entity> e) {
+void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
     //TODO: spawn small enemies at the location input enemy e
 
     //when we create smaller enemy, we have to read the values of the orginal enemy
     //- spawn a number of small enemies equal to vertices of original enemy
     //- set each small enemy to the same color as the original, half the size
     //- small enemies are worth double the points 
+
+    auto& parentCircle=be->get<CShape>().circle;
+    auto& parenrtTrans=be->get<CTransform>();
+    int n = parentCircle.getPointCount();
+    float anglefraction = (3.14159f*2)/n;
+    while(n--) {
+        auto entity = m_entities.addEntity("smallenemy");
+        //!check if entity->add<CShape>()=be->get<CShape>() works;
+        entity->add<CShape>(parentCircle.getRadius()/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),parentCircle.getOutlineThickness()/2);
+        entity->add<CTransform>(parenrtTrans.pos,Vec2f(4*std::cos((n)*anglefraction),4*std::sin((n)*anglefraction)),0);
+        entity->add<CCollision>((parentCircle.getRadius()/2)-1);
+    }
 }
 
 //spawn a bullet from a given entity to a target location 
@@ -164,11 +182,14 @@ void Game::sLifespan() {
 void Game::sCollision() {
     //TODO: implement all proper collisions between entities
     // be sure to use the collection radius, NOT the shape radius
-    
-    for (auto b:m_entities.getEntities("bullets")) {
+    for (auto &b:m_entities.getEntities("bullet")) {
 
-        for (auto e:m_entities.getEntities("enemy")) {
+        for (auto &e:m_entities.getEntities("enemy")) {
         
+            if(b->get<CTransform>().pos.dist(e->get<CTransform>().pos)<b->get<CCollision>().radius+e->get<CCollision>().radius) {
+                spawnSmallEnemies(e);
+                std::cout<<"booom\n";
+            }
 
         }    
     }
