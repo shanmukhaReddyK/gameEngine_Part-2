@@ -198,6 +198,7 @@ void Game::sCollision() {
         
             if(b->get<CTransform>().pos.dist(e->get<CTransform>().pos)<b->get<CCollision>().radius+e->get<CCollision>().radius) {
                 e->destroy();
+                b->destroy();
                 spawnSmallEnemies(e);
                 std::cout<<"booom\n";
             }
@@ -208,6 +209,7 @@ void Game::sCollision() {
         
             if(b->get<CTransform>().pos.dist(se->get<CTransform>().pos)<b->get<CCollision>().radius+se->get<CCollision>().radius) {
                 se->destroy();
+                b->destroy();
                 std::cout<<"booom\n";
             }
 
