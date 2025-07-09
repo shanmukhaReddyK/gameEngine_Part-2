@@ -1,2 +1,17 @@
 .vscode/
 bin/imgui.ini
+
+# === Compiled object files ===
+*.o
+*.obj
+*.lo
+*.slo
+
+# === Compiled binary executables ===
+*.exe
+*.out
+*.app
+*.elf
+sfmlgame
+
+*.d

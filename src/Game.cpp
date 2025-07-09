@@ -187,11 +187,34 @@ void Game::sCollision() {
         for (auto &e:m_entities.getEntities("enemy")) {
         
             if(b->get<CTransform>().pos.dist(e->get<CTransform>().pos)<b->get<CCollision>().radius+e->get<CCollision>().radius) {
+                e->destroy();
                 spawnSmallEnemies(e);
                 std::cout<<"booom\n";
             }
 
-        }    
+        }   
+        
+        for (auto &se:m_entities.getEntities("smallenemy")) {
+        
+            if(b->get<CTransform>().pos.dist(se->get<CTransform>().pos)<b->get<CCollision>().radius+se->get<CCollision>().radius) {
+                se->destroy();
+                std::cout<<"booom\n";
+            }
+
+        }
+    }
+
+    for (auto &e:m_entities.getEntities()) {
+        auto& tran=e->get<CTransform>();
+        float radius=e->get<CCollision>().radius;
+
+        if(tran.pos.x<radius || tran.pos.x+radius>1280){
+            tran.velocity.x*=-1;
+        }
+
+        if(tran.pos.y<radius || tran.pos.y+radius>720){
+            tran.velocity.y*=-1;
+        }
     }
 
 }
