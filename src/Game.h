@@ -1,6 +1,6 @@
 #pragma once
 
-
+#include<fstream>
 #include"EntityManager.hpp"
 #include<SFML/Graphics.hpp>
 
@@ -10,6 +10,8 @@
 struct PlayerConfig {int SR, CR, FR, FG, FB, OR, OG, OB, OT, V; float S; };
 struct EnemyConfig {int SR, CR, OR, OG, OB, OT, VMIN, VMAX, L, SI ; float SMAX, SMIN; };
 struct BulletConfig {int SR, CR, FR, FG, FB, OR, OG, OB, OT, V, L; float S; };
+struct WindowConfig {int W, H, FL; bool FS; };
+struct FontConfig {std::string fontPath; int S, FR, FG, FB; };
 
 class Game {
     sf::RenderWindow        m_window;    //the window we will draw
@@ -18,6 +20,9 @@ class Game {
     std::optional<sf::Text> m_text;      //the score text to be drawn to the screen
     PlayerConfig            m_playerConfig;
     EnemyConfig             m_enemyConfig;
+    BulletConfig            m_bulletConfig;
+    WindowConfig            m_windowConfig;
+    FontConfig              m_fontConfig;
     sf::Clock               m_deltaClock;
     int                     m_score=0;
     int                     m_currentFrame=0;

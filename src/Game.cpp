@@ -9,8 +9,43 @@ Game::Game(const std::string& config) {
 }
 
 void Game::init(const std::string& path) {
-    //TODO read in config file here
+    // read in config file here
     // use premade playerconfig, enemyconfig, bulletconfig
+    std::ifstream fin(path);
+
+    if(!fin.is_open()) {
+        std::cerr<<"Error opening file "<< path <<"\n";
+    }
+
+    std::string word;
+
+    while(fin >> word) {
+        if(word == "Window") {
+            fin >> m_windowConfig.W >> m_windowConfig.H >> m_windowConfig.FL >> m_windowConfig.FS;
+        }
+
+        else if(word == "Font") {
+            fin >> m_fontConfig.fontPath >> m_fontConfig.S >> m_fontConfig.FR >> m_fontConfig.FG >> m_fontConfig.FB;
+            
+            //initialize font and text
+            m_font.openFromFile(m_fontConfig.fontPath);
+            m_text = sf::Text(m_font);
+            m_text->setCharacterSize(m_fontConfig.S);
+            m_text->setFillColor({m_fontConfig.FR, m_fontConfig.FG, m_fontConfig.FB});
+        }
+
+        else if(word=="Player") {
+            fin >> m_playerConfig.SR >> m_playerConfig.CR >> m_playerConfig.S >> m_playerConfig.FR >> m_playerConfig.FG >> m_playerConfig.FB >> m_playerConfig.OR >> m_playerConfig.OG >> m_playerConfig.OB >> m_playerConfig.OT >> m_playerConfig.V;
+        }
+
+        else if(word=="Enemy") {
+            fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
+        }
+
+        else {
+            fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >> m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >> m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
+        }
+    }
 
     //set up default window parameters
     m_window.create(sf::VideoMode({1280,720}),"SFML_Window");
