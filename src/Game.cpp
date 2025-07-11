@@ -6,6 +6,7 @@
 
 Game::Game(const std::string& config) {
     init(config);
+    srand(time(0));
 }
 
 void Game::init(const std::string& path) {
@@ -31,7 +32,7 @@ void Game::init(const std::string& path) {
             m_font.openFromFile(m_fontConfig.fontPath);
             m_text = sf::Text(m_font);
             m_text->setCharacterSize(m_fontConfig.S);
-            m_text->setFillColor({m_fontConfig.FR, m_fontConfig.FG, m_fontConfig.FB});
+            m_text->setFillColor(sf::Color(std::uint8_t(m_fontConfig.FR),std::uint8_t(m_fontConfig.FG), std::uint8_t(m_fontConfig.FB)));
         }
 
         else if(word=="Player") {
@@ -42,14 +43,22 @@ void Game::init(const std::string& path) {
             fin >> m_enemyConfig.SR >> m_enemyConfig.CR >> m_enemyConfig.SMIN >> m_enemyConfig.SMAX >> m_enemyConfig.OR >> m_enemyConfig.OG >> m_enemyConfig.OB >> m_enemyConfig.OT >> m_enemyConfig.VMIN >> m_enemyConfig.VMAX >> m_enemyConfig.L >> m_enemyConfig.SI;
         }
 
-        else {
+        else if(word=="Bullet") {
             fin >> m_bulletConfig.SR >> m_bulletConfig.CR >> m_bulletConfig.S >> m_bulletConfig.FR >> m_bulletConfig.FG >> m_bulletConfig.FB >> m_bulletConfig.OR >> m_bulletConfig.OG >> m_bulletConfig.OB >> m_bulletConfig.OT >> m_bulletConfig.V >> m_bulletConfig.L;
         }
+
+        else{}
     }
 
     //set up default window parameters
-    m_window.create(sf::VideoMode({1280,720}),"SFML_Window");
-    m_window.setFramerateLimit(60);
+    if(m_windowConfig.FS) {
+        m_window.create(sf::VideoMode::getDesktopMode(),"SFML_Window");
+    }
+    else {
+        m_window.create(sf::VideoMode({uint(m_windowConfig.W),uint(m_windowConfig.H)}),"SFML_Window");
+    }
+    
+    m_window.setFramerateLimit(m_windowConfig.FL);
 
     ImGui::SFML::Init(m_window);
 
@@ -78,10 +87,10 @@ void Game::run() {
         //required update call to ImGui
         ImGui::SFML::Update(m_window,m_deltaClock.restart());
 
+        sUserInput();
         sEnemySpawner();
         sMovement();
         sCollision();
-        sUserInput();
         sGUI();
         sRender();
         sLifespan();
@@ -107,17 +116,16 @@ void Game::spawnPlayer() {
     entity->add<CTransform>(Vec2f(200.0f,200.0f), Vec2f(0.0f,0.0f), 0.0f);
     
     //the entity shape will have radius 32, 8 sides, dark grey fill , and red outline of thickness 4
-    entity->add<CShape>(32.0f, 8, sf::Color(10,10,10), sf::Color(255,0,0), 4.0f);
-
+    entity->add<CShape>(m_playerConfig.SR, m_playerConfig.V, sf::Color((std::uint8_t(m_playerConfig.FR),std::uint8_t(m_playerConfig.FG), std::uint8_t(m_playerConfig.FB))), sf::Color(std::uint8_t(m_playerConfig.OR),std::uint8_t(m_playerConfig.OG), std::uint8_t(m_playerConfig.OB)),m_playerConfig.OT);
+    // entity->add<CShape>(32.0f, 8, sf::Color(10,10,10), sf::Color(255,0,0), 4.0f);
     //add a input component to the player so we can use inputs
     entity->add<CInput>();
 
     //add collision 
-    entity->add<CCollision>(30.0f);
+    entity->add<CCollision>(m_playerConfig.CR);
 }
 
 int Game::sRandnum(int min, int max) {
-    srand(time(0));
     return min + (rand() % (max-min+1));
 }
 
@@ -128,19 +136,19 @@ void Game::spawnEnemy() {
     auto entity = m_entities.addEntity("enemy");
    
     //the entity shape will have shape radius, random sides, random fill , and white outline of thickness 2
-    //TODO: implement better way to get random color because it gives dame color becaused it is called in same second (using time(0) for thats why)
-    entity->add<CShape>(28.0f,sRandnum(3,6), sf::Color(sRandnum(0,255),sRandnum(0,26),sRandnum(0,157)), sf::Color(255,0,0), 2.0f);
+    entity->add<CShape>(m_enemyConfig.SR,sRandnum(m_enemyConfig.VMIN,m_enemyConfig.VMAX), sf::Color(sRandnum(0,255),sRandnum(0,255),sRandnum(0,255)), sf::Color(std::uint8_t(m_enemyConfig.OR),std::uint8_t(m_enemyConfig.OG),std::uint8_t(m_enemyConfig.OB)), m_enemyConfig.OT);
     
     //get radius to set limits in pos 
-    int radius = entity->get<CShape>().circle.getRadius();
+    int radius = m_enemyConfig.SR;
 
     float randangle=(sRandnum(0,360)*(3.14159f/180));
 
     //give entity a transform so that it spawns at random pos with  random velocity (within the constraint) and angle 0
-    entity->add<CTransform>(Vec2f(sRandnum(0+radius,1280-radius),sRandnum(0+radius,720-radius)), Vec2f(4*std::cos(randangle),4*std::sin(randangle)), 0);
+    m_enemyConfig.S = sRandnum(m_enemyConfig.SMIN,m_enemyConfig.SMAX);
+    entity->add<CTransform>(Vec2f(sRandnum(0+radius,m_windowConfig.W-radius),sRandnum(0+radius,m_windowConfig.H-radius)), Vec2f(m_enemyConfig.S*std::cos(randangle),m_enemyConfig.S*std::sin(randangle)), 0);
 
     //add collision
-    entity->add<CCollision>(26.0f);
+    entity->add<CCollision>(m_enemyConfig.CR);
 
     //record when the most recent enemy was spawned
     m_lastEnenmySpawnTime=m_currentFrame;
@@ -160,11 +168,11 @@ void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
     while(n--) {
         auto entity = m_entities.addEntity("smallenemy");
         //!check if entity->add<CShape>()=be->get<CShape>() works;
-        entity->add<CShape>(parentCircle.getRadius()/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),parentCircle.getOutlineThickness()/2);
-        entity->add<CTransform>(parenrtTrans.pos,Vec2f(4*std::cos((n)*anglefraction),4*std::sin((n)*anglefraction)),0);
-        entity->add<CCollision>((parentCircle.getRadius()/2)-1);
+        entity->add<CShape>(m_enemyConfig.SR/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),m_enemyConfig.OT/2);
+        entity->add<CTransform>(parenrtTrans.pos,Vec2f(m_enemyConfig.S*std::cos((n)*anglefraction),m_enemyConfig.S*std::sin((n)*anglefraction)),0);
+        entity->add<CCollision>((m_enemyConfig.SR/2)-1);
         //add lifespan
-        entity->add<CLifespan>(90);
+        entity->add<CLifespan>(m_enemyConfig.L);
     }
 }
 
@@ -175,12 +183,12 @@ void Game::spawnBullet(std::shared_ptr<Entity> entity, const Vec2f& target) {
     auto e = m_entities.addEntity("bullet");
     Vec2f direction = target-Vec2f(entity->get<CTransform>().pos);
     direction.normalize();
-    Vec2f velocity= direction*20;
+    Vec2f velocity= direction*m_bulletConfig.S;
     e->add<CTransform>(Vec2f(entity->get<CTransform>().pos), velocity, 0.0f);
-    e->add<CShape>(6.0f, 32, sf::Color(255,255,255), sf::Color(0,0,0), 0.5f);
+    e->add<CShape>(m_bulletConfig.SR, m_bulletConfig.V, sf::Color(std::uint8_t(m_bulletConfig.FR), std::uint8_t(m_bulletConfig.FG), std::uint8_t(m_bulletConfig.FB)), sf::Color(std::uint8_t(m_bulletConfig.OR), std::uint8_t(m_bulletConfig.OG), std::uint8_t(m_bulletConfig.OB)), m_bulletConfig.OT);
 
     //add lifespan
-    e->add<CLifespan>(90);
+    e->add<CLifespan>(m_bulletConfig.L);
 }
 
 void Game::spawnSpecialWeapon(std::shared_ptr<Entity> e) {
@@ -191,7 +199,7 @@ void Game::sMovement() {
     //- you should read the m_player->CInput component to determine if the player is  moving or not
     player()->get<CTransform>().velocity=Vec2f(player()->get<CInput>().right-player()->get<CInput>().left,player()->get<CInput>().down-player()->get<CInput>().up);
     player()->get<CTransform>().velocity.normalize();
-    player()->get<CTransform>().velocity*=5; //scale it with speed to get velocity;
+    player()->get<CTransform>().velocity*=m_playerConfig.S; //scale it with speed to get velocity;
 
     for(auto &e : m_entities.getEntities()) {
 
@@ -215,8 +223,9 @@ void Game::sLifespan() {
             //setup alpha channel
             if(e->isAlive()) {
                 sf::Color c = e->get<CShape>().circle.getFillColor();
-                e->get<CShape>().circle.setFillColor({c.r,c.g,c.b,std::uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
-                e->get<CShape>().circle.setOutlineColor({255,0,0,std::uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
+                sf::Color oc = e->get<CShape>().circle.getOutlineColor();
+                e->get<CShape>().circle.setFillColor({c.r,c.g,c.b,uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
+                e->get<CShape>().circle.setOutlineColor({oc.r,oc.g,oc.b, uint8_t((255*lifespan.remaining)/lifespan.lifespan)});
             }
 
             if(lifespan.remaining<=0) {
@@ -269,7 +278,7 @@ void Game::sCollision() {
 
 void Game::sEnemySpawner() {
     //call enemy spawner every time interval mentioned in enemyconfig file
-    if(m_currentFrame==m_lastEnenmySpawnTime+60) {
+    if(m_currentFrame==m_lastEnenmySpawnTime+m_enemyConfig.SI) {
         spawnEnemy();
     }
 }
