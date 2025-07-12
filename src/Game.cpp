@@ -33,6 +33,7 @@ void Game::init(const std::string& path) {
             m_text = sf::Text(m_font);
             m_text->setCharacterSize(m_fontConfig.S);
             m_text->setFillColor(sf::Color(std::uint8_t(m_fontConfig.FR),std::uint8_t(m_fontConfig.FG), std::uint8_t(m_fontConfig.FB)));
+            m_text->setPosition({0.0f,0.0f});
         }
 
         else if(word=="Player") {
@@ -139,6 +140,9 @@ void Game::spawnPlayer() {
 
     //add collision 
     entity->add<CCollision>(m_playerConfig.CR);
+
+    //add score
+    entity->add<CScore>();
 }
 
 int Game::sRandnum(int min, int max) {
@@ -274,8 +278,13 @@ void Game::sCollision() {
         for (auto &e:m_entities.getEntities("enemy")) {
         
             if(b->get<CTransform>().pos.dist(e->get<CTransform>().pos)<b->get<CCollision>().radius+e->get<CCollision>().radius) {
+                //increment score
+                int n=e->get<CShape>().circle.getPointCount();
+                player()->get<CScore>().score+=n*100;
+
                 e->destroy();
                 b->destroy();
+                
                 spawnSmallEnemies(e);
                 std::cout<<"booom\n";
             }
@@ -285,6 +294,9 @@ void Game::sCollision() {
         for (auto &se:m_entities.getEntities("smallenemy")) {
         
             if(b->get<CTransform>().pos.dist(se->get<CTransform>().pos)<b->get<CCollision>().radius+se->get<CCollision>().radius) {
+                //increment score
+                int n=se->get<CShape>().circle.getPointCount();
+                player()->get<CScore>().score+=n*200;
                 se->destroy();
                 b->destroy();
                 std::cout<<"booom\n";
@@ -390,7 +402,9 @@ void Game::sRender() {
     //  sample drawing of player we created
     m_window.clear();
 
-    
+    m_text->setString("SCORE: " + std::to_string(player()->get<CScore>().score));
+    m_window.draw(*m_text);
+
     for(auto& e: m_entities.getEntities()) {
         //set the position of the entity based on entity's transform->pos
         e->get<CShape>().circle.setPosition(e->get<CTransform>().pos);   
