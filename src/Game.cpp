@@ -331,11 +331,51 @@ void Game::sGUI() {
                     ImGui::SliderInt("Spawn Interval",&m_enemyConfig.SI,10,100);
                     ImGui::Unindent();
 
-                    ImGui::EndTabItem();
+                ImGui::EndTabItem();
             }
             if (ImGui::BeginTabItem("Entities")) {
-                    ImGui::Text("This is the Entities tab!\nblah blah blah blah blah");
-                    ImGui::EndTabItem();
+
+                    if (ImGui::CollapsingHeader("Entities", ImGuiTreeNodeFlags_None)) {
+                        ImGui::Indent();
+
+                        for(auto& [tag,entityVec] : m_entities.getEntityMap() ) {
+                             if (ImGui::CollapsingHeader(tag.c_str(), ImGuiTreeNodeFlags_None)){
+                                ImGui::Indent();
+                                for(auto& e:entityVec ) {
+                                    sf::Color c = e->get<CShape>().circle.getFillColor();
+                                    ImGui::PushID(e->id());
+                                    ImGui::PushStyleColor(ImGuiCol_Button,c);
+                                    if(ImGui::Button("D"))
+                                        e->destroy();
+                                    ImGui::PopStyleColor();
+                                    ImGui::PopID();
+                                    ImGui::SameLine();
+                                    ImGui::Text(" %d  %s (%.2f,%.2f)",e->id(),e->tag().c_str(),e->get<CTransform>().pos.x,e->get<CTransform>().pos.y);
+                                }
+                                ImGui::Unindent();
+                            }
+                        }
+                        ImGui::Unindent();
+                    }
+
+                    if (ImGui::CollapsingHeader("All Entities", ImGuiTreeNodeFlags_None)) {
+                        ImGui::Indent();
+
+                            for(auto& e:m_entities.getEntities()) {
+                                sf::Color c = e->get<CShape>().circle.getFillColor();
+                                ImGui::PushID(e->id());
+                                ImGui::PushStyleColor(ImGuiCol_Button,c);
+                                if(ImGui::Button("D"))
+                                    e->destroy();
+                                ImGui::PopStyleColor();
+                                ImGui::PopID();
+                                ImGui::SameLine();
+                                ImGui::Text(" %d  %s (%.2f,%.2f)",e->id(),e->tag().c_str(),e->get<CTransform>().pos.x,e->get<CTransform>().pos.y);
+                                }
+                        ImGui::Unindent();
+                    }
+
+                ImGui::EndTabItem();
             }
             ImGui::EndTabBar();
         }
