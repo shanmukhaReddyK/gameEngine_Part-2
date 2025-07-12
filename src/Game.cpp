@@ -441,12 +441,15 @@ void Game::sUserInput() {
                 
                 case sf::Keyboard::Scancode::G:
                     std::cout<<"G key is pressed!\n";
-                    m_setGui = true;
+                    if(!m_setGui)
+                        m_setGui = true;
+                    
+                    else m_setGui = false;
                     break;
 
                 case sf::Keyboard::Scancode::Escape:
                     std::cout<<"Escape key is pressed!\n";
-                    m_setGui = true;
+                    m_running=false;
                     break;
 
                 case sf::Keyboard::Scancode::P:
