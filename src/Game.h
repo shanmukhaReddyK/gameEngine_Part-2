@@ -29,6 +29,12 @@ class Game {
     int                     m_lastEnenmySpawnTime=0;
     bool                    m_paused=false;
     bool                    m_running=true;
+
+    bool                    m_setMovement=true; //for GUI
+    bool                    m_setLifespan=true; //for GUI
+    bool                    m_setCollision=true; //for GUI
+    bool                    m_setSpawning=true;  //for GUI
+    bool                    m_setGui=true; //for GUI
     
     void init(const std::string &config); //initialize game from a config file
     void setPaused(bool paused);

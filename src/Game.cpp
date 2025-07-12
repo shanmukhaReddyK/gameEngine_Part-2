@@ -91,12 +91,22 @@ void Game::run() {
         ImGui::SFML::Update(m_window,m_deltaClock.restart());
 
         sUserInput();
-        sEnemySpawner();
-        sMovement();
-        sCollision();
-        sGUI();
+        if(m_setSpawning)
+            sEnemySpawner();
+        
+        if(m_setMovement)
+            sMovement();
+        
+        if(m_setCollision)
+            sCollision();
+        
+        if(m_setGui)
+            sGUI();
+        
         sRender();
-        sLifespan();
+
+        if(m_setLifespan)
+            sLifespan();
 
         //increment the current frame
         //TODO::may be need to move while imlementing pause
@@ -169,7 +179,6 @@ void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
     float anglefraction = (3.14159f*2)/n;
     while(n--) {
         auto entity = m_entities.addEntity("smallenemy");
-        //!check if entity->add<CShape>()=be->get<CShape>() works;
         entity->add<CShape>(m_enemyConfig.SR/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),m_enemyConfig.OT/2);
         entity->add<CTransform>(parenrtTrans.pos,Vec2f(m_enemyConfig.S*std::cos((n)*anglefraction),m_enemyConfig.S*std::sin((n)*anglefraction)),0);
         entity->add<CCollision>((m_enemyConfig.SR/2)-1);
@@ -297,7 +306,7 @@ void Game::sCollision() {
 
 void Game::sEnemySpawner() {
     //call enemy spawner every time interval mentioned in enemyconfig file
-    if(m_currentFrame==m_lastEnenmySpawnTime+m_enemyConfig.SI) {
+    if(m_currentFrame>=m_lastEnenmySpawnTime+m_enemyConfig.SI) {
         spawnEnemy();
     }
 }
@@ -306,8 +315,30 @@ void Game::sGUI() {
 
     ImGui::Begin("Geometry Wars");
 
-    ImGui::Text("shit goes here");
+    ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+        if (ImGui::BeginTabBar("MyTabBar", tab_bar_flags)) {
+            if (ImGui::BeginTabItem("Systems")) {
+                    ImGui::Checkbox("Movement",&m_setMovement);
+                    ImGui::Checkbox("Lifespan",&m_setLifespan);
+                    ImGui::Checkbox("Collision",&m_setCollision);
+                    ImGui::Checkbox("GUI (hotkey G)",&m_setGui);
 
+                    ImGui::Checkbox("Spawning",&m_setSpawning);
+                    ImGui::Indent();
+                    if(ImGui::Button("Manual Spawn")) {
+                        spawnEnemy();
+                    }
+                    ImGui::SliderInt("Spawn Interval",&m_enemyConfig.SI,10,100);
+                    ImGui::Unindent();
+
+                    ImGui::EndTabItem();
+            }
+            if (ImGui::BeginTabItem("Entities")) {
+                    ImGui::Text("This is the Entities tab!\nblah blah blah blah blah");
+                    ImGui::EndTabItem();
+            }
+            ImGui::EndTabBar();
+        }
     ImGui::End();
 }
 
@@ -362,6 +393,11 @@ void Game::sUserInput() {
                 case sf::Keyboard::Scancode::A:
                     std::cout<<"A key is pressed!\n";
                     player()->get<CInput>().left = true;
+                    break;
+                
+                case sf::Keyboard::Scancode::G:
+                    std::cout<<"G key is pressed!\n";
+                    m_setGui = true;
                     break;
                 
                 default :
