@@ -52,7 +52,10 @@ void Game::init(const std::string& path) {
 
     //set up default window parameters
     if(m_windowConfig.FS) {
-        m_window.create(sf::VideoMode::getDesktopMode(),"SFML_Window");
+        sf::VideoMode desktop=sf::VideoMode::getDesktopMode();
+        m_window.create(desktop,"SFML_Window");
+        m_windowConfig.W=desktop.size.x;
+        m_windowConfig.H=desktop.size.y;
     }
     else {
         m_window.create(sf::VideoMode({uint(m_windowConfig.W),uint(m_windowConfig.H)}),"SFML_Window");
@@ -264,11 +267,11 @@ void Game::sCollision() {
         auto& tran=e->get<CTransform>();
         float radius=e->get<CCollision>().radius;
 
-        if(tran.pos.x<radius || tran.pos.x+radius>1280){
+        if(tran.pos.x<radius || tran.pos.x+radius>m_windowConfig.W){
             tran.velocity.x*=-1;
         }
 
-        if(tran.pos.y<radius || tran.pos.y+radius>720){
+        if(tran.pos.y<radius || tran.pos.y+radius>m_windowConfig.H){
             tran.velocity.y*=-1;
         }
     }
