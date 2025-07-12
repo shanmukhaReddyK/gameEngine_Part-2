@@ -74,14 +74,11 @@ void Game::init(const std::string& path) {
 
 std::shared_ptr<Entity> Game::player() {
     auto& players = m_entities.getEntities("player");
-    assert(players.size()==1); //TODO : learn about assert and why are we using this line
+    assert(players.size()==1); //only one player in game
     return players.front();
 }
 
 void Game::run() {
-    //TODO: Add pause functionality here
-    // some systems should function while paused (rendering)
-    // some systems should not (movement/input)
 
     while(m_running) {
         //update entityManger
@@ -91,13 +88,14 @@ void Game::run() {
         ImGui::SFML::Update(m_window,m_deltaClock.restart());
 
         sUserInput();
-        if(m_setSpawning)
+        
+        if(m_setSpawning && !m_paused)
             sEnemySpawner();
         
-        if(m_setMovement)
+        if(m_setMovement && !m_paused)
             sMovement();
         
-        if(m_setCollision)
+        if(m_setCollision && !m_paused)
             sCollision();
         
         if(m_setGui)
@@ -105,17 +103,23 @@ void Game::run() {
         
         sRender();
 
-        if(m_setLifespan)
+        if(m_setLifespan && !m_paused)
             sLifespan();
 
         //increment the current frame
-        //TODO::may be need to move while imlementing pause
-        m_currentFrame++;
+        if(!m_paused)
+            m_currentFrame++;
     }
 }
 
 void Game::setPaused(bool paused) {
-    //TODO
+    if(!m_paused) {
+        m_paused=paused;
+    }
+
+    else {
+        m_paused=false;
+    }
 }
 
 void Game::spawnPlayer() {
@@ -439,7 +443,17 @@ void Game::sUserInput() {
                     std::cout<<"G key is pressed!\n";
                     m_setGui = true;
                     break;
-                
+
+                case sf::Keyboard::Scancode::Escape:
+                    std::cout<<"Escape key is pressed!\n";
+                    m_setGui = true;
+                    break;
+
+                case sf::Keyboard::Scancode::P:
+                    std::cout<<"P key is pressed!\n";
+                    setPaused(true);
+                    break;
+              
                 default :
                     break;
             }
