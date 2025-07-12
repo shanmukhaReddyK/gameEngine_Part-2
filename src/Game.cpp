@@ -106,7 +106,6 @@ void Game::setPaused(bool paused) {
 }
 
 void Game::spawnPlayer() {
-    //TODO: finish adding all properties of the player with correct values from config
 
     //we creater every entity by calling EntityManager.addEntity(tag);
     //this returns a std::shared_ptr<Enity>, so we use auto to save typing
