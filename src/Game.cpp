@@ -211,6 +211,23 @@ void Game::sMovement() {
          transform.pos += transform.velocity;
         }
     }
+
+    //prevent player moving out of window
+    if(player()->get<CTransform>().pos.x<m_playerConfig.SR){
+        player()->get<CTransform>().pos.x=m_playerConfig.SR;
+    }
+
+    if(player()->get<CTransform>().pos.x+m_playerConfig.SR>m_windowConfig.W) {
+        player()->get<CTransform>().pos.x=m_windowConfig.W-m_playerConfig.SR;
+    }
+
+    if(player()->get<CTransform>().pos.y<m_playerConfig.SR){
+        player()->get<CTransform>().pos.y=m_playerConfig.SR;
+    }
+
+    if(player()->get<CTransform>().pos.y+m_playerConfig.SR>m_windowConfig.H) {
+        player()->get<CTransform>().pos.y=m_windowConfig.H-m_playerConfig.SR;
+    }
 }
 
 void Game::sLifespan() {
