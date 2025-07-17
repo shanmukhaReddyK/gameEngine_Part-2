@@ -189,7 +189,7 @@ void Game::spawnSmallEnemies( std::shared_ptr<Entity> be) {
         auto entity = m_entities.addEntity("smallenemy");
         entity->add<CShape>(m_enemyConfig.SR/2,parentCircle.getPointCount(),parentCircle.getFillColor(),parentCircle.getOutlineColor(),m_enemyConfig.OT/2);
         entity->add<CTransform>(parenrtTrans.pos,Vec2f(m_enemyConfig.S*std::cos((n)*anglefraction),m_enemyConfig.S*std::sin((n)*anglefraction)),0);
-        entity->add<CCollision>((m_enemyConfig.SR/2)-1);
+        entity->add<CCollision>((m_enemyConfig.SR/2));
         //add lifespan
         entity->add<CLifespan>(m_enemyConfig.L);
     }
@@ -315,6 +315,12 @@ void Game::sCollision() {
 
         if(tran.pos.y<radius || tran.pos.y+radius>m_windowConfig.H){
             tran.velocity.y*=-1;
+        }
+
+        if(e->tag()!="player" && e->tag()!="bullet") {
+            if(player()->get<CTransform>().pos.dist(e->get<CTransform>().pos) < m_playerConfig.CR + e->get<CCollision>().radius ) {
+                player()->get<CTransform>().pos =Vec2f(m_windowConfig.W/2,m_windowConfig.H/2);
+            }
         }
     }
 
